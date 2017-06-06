@@ -174,31 +174,33 @@ class CKWaveCollectionViewAnimator: NSObject, UIViewControllerAnimatedTransition
             cell.frame.size = fromFlowLayout.itemSize
             cell.center = animateFromPoint
             cell.alpha = 1.0
-            cell.layer.zPosition = kTopCellLayerZIndex - CGFloat((cellIndexPath as NSIndexPath).row*self.kDeltaBetweenCellLayers)
-        
-            UIView.animateKeyframes(withDuration: 1.0, delay: 0, options: UIViewKeyframeAnimationOptions(), animations: { () -> Void in
+            cell.layer.zPosition = kTopCellLayerZIndex - CGFloat(cellIndexPath.row*self.kDeltaBetweenCellLayers)
             
-                let relativeStartTime = (self.kCellAnimBigDelta*Double((cellIndexPath as NSIndexPath).row % rowsAndColumns.columns))
-
-                var relativeDuration = self.animationDuration - (self.kCellAnimSmallDelta * Double((cellIndexPath as NSIndexPath).row))
+            let priority = Double(cellIndexPath.row % rowsAndColumns.columns + cellIndexPath.row / rowsAndColumns.columns)
+            
+            let relativeStartTime = self.kCellAnimBigDelta * priority
+            
+            var relativeDuration = self.animationDuration - (self.kCellAnimSmallDelta * priority)
+        
+            UIView.animateKeyframes(withDuration: relativeDuration, delay: relativeStartTime, options: UIViewKeyframeAnimationOptions(), animations: { () -> Void in
             
                 if (relativeStartTime + relativeDuration) > self.animationDuration {
                     relativeDuration = self.animationDuration - relativeStartTime
                 }
             
-                UIView.addKeyframe(withRelativeStartTime: 0.0 + (self.kCellAnimBigDelta*Double((cellIndexPath as NSIndexPath).row % rowsAndColumns.columns)), relativeDuration: relativeDuration, animations: { () -> Void in
+                UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 1.0, animations: { () -> Void in
                 
                     cell.backgroundColor = cellOriginalColor
                 })
             
-                UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 0.1, animations: { () -> Void in
+                UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 1.0, animations: { () -> Void in
                 
                     cell.alpha = 1.0
                 })
             
-                UIView.addKeyframe(withRelativeStartTime: 0.0 + (self.kCellAnimBigDelta*Double((cellIndexPath as NSIndexPath).row % rowsAndColumns.columns)), relativeDuration: relativeDuration, animations: { () -> Void in
+                UIView.addKeyframe(withRelativeStartTime: 0.0, relativeDuration: 1.0, animations: { () -> Void in
                 
-                    cell.frame = self.centerPointWithSizeToFrame(cellLayoutAttributes.center, size: toFlowLayout.itemSize)
+                    cell.frame = self.createFrame(fromPoint: cellLayoutAttributes.center, withSize: toFlowLayout.itemSize)
                 })
             
                 }, completion: { (finished) -> Void in
@@ -290,7 +292,7 @@ class CKWaveCollectionViewAnimator: NSObject, UIViewControllerAnimatedTransition
             
             UIView.addKeyframe(withRelativeStartTime: relativeStartTime, relativeDuration: relativeDuration, animations: { () -> Void in
                 
-                cell.frame = self.centerPointWithSizeToFrame(animateToPoint, size: cellSize)
+                cell.frame = self.createFrame(fromPoint: animateToPoint, withSize: cellSize)
             })
             
             }, completion: { (finished) -> Void in
@@ -299,7 +301,7 @@ class CKWaveCollectionViewAnimator: NSObject, UIViewControllerAnimatedTransition
         })
     }
     
-    fileprivate func centerPointWithSizeToFrame(_ point: CGPoint, size: CGSize) -> CGRect {
+    fileprivate func createFrame(fromPoint point: CGPoint, withSize size: CGSize) -> CGRect {
         return CGRect(x: point.x - (size.width/2), y: point.y - (size.height/2), width: size.width, height: size.height)
     }
     
